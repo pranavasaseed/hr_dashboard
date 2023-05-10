@@ -1,0 +1,80 @@
+---
+title: "bike_ride_case"
+author: "pranav kumar"
+date: "2023-05-06"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+#cheking working folder
+getwd()
+```
+
+```{r}
+#csv file import for work with header
+may_2021 <- read.csv("202105.csv", header = TRUE, sep = ",")
+june_2021 <- read.csv("202106.csv", header = TRUE, sep = ",")
+july_2021 <- read.csv("202107.csv", header = TRUE, sep = ",")
+august_2021 <- read.csv("202108.csv", header = TRUE, sep = ",")
+september_2021 <- read.csv("202109.csv", header = TRUE, sep = ",")
+october_2021 <- read.csv("202110.csv", header = TRUE, sep = ",")
+november_2021 <- read.csv("202111.csv", header = TRUE, sep = ",")
+december_2021 <- read.csv("202112.csv", header = TRUE, sep = ",")
+january_2022 <- read.csv("202201.csv", header = TRUE, sep = ",")
+february_2022 <- read.csv("202202.csv", header = TRUE, sep = ",")
+march_2022 <- read.csv("202203.csv", header = TRUE, sep = ",")
+april_2022 <- read.csv("202204.csv", header = TRUE, sep = ",")
+```
+
+```{r}
+#load library
+library(tidyverse)
+library(janitor)
+library(lubridate)
+```
+
+```{r}
+#merging all the date to make a data frame
+bike_rides <- rbind(may_2021,june_2021,july_2021,august_2021,september_2021,october_2021,november_2021,december_2021,january_2022,february_2022,march_2022,april_2022)
+```
+
+```{r}
+#removing blank space from the data frame
+bike_rides <- janitor::remove_empty(bike_rides, which = c("rows"))
+bike_rides <- janitor::remove_empty(bike_rides, which = c("cols"))
+```
+
+```{r}
+#pulling data from data frame
+bike_rides <- bike_rides %>%
+  select(started_at, ended_at, member_casual, rideable_type)
+```
+
+```{r}
+#converting to date, time data frame
+bike_rides$started_at <- lubridate::as_datetime(bike_rides$started_at)
+bike_rides$ended_at <- lubridate::as_datetime(bike_rides$ended_at)
+
+```
+
+```{r}
+#convertind date, time in hour
+bike_rides$started_at <- lubridate::hours(bike_rides$started_at)
+bike_rides$ended_at <- lubridate::hours(bike_rides$ended_at)
+```
+
+```{r}
+#calculating ride duration
+bike_rides$duration <- difftime(bike_rides$ended_at, bike_rides$started_at, units = c("mins"))
+```
+
+```{r}
+#filter out of negative duration
+clean_bike_rides <- bike_rides %>%
+  filter(duration > 0) %>% drop_na()
+```
+
+
+write.csv(clean_bike_rides, file = "clean_bike_rides.csv")
